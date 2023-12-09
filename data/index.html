@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ESP-LEDS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" href="index.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="color-picker-container">
+        <h1 class="color-picker-heading">Color:</h1>
+        <input
+          type="color"
+          id="colorPicker"
+          class="color-picker"
+          value="#ffffff"
+        />
+      </div>
+      <button class="ctrl-btn" id="modeDefault" onclick="mode(1)">
+        Custom
+      </button>
+      <button class="ctrl-btn" id="modeAqua" onclick="mode(2)">Aqua</button>
+      <button class="ctrl-btn" id="modeOff" onclick="mode(0)">Off</button>
+      <div>&nbsp;</div>
+      <button class="ctrl-btn" id="managerButton">Wifi-Setup</button>
+    </div>
+
+    <!-- Modal overlay -->
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <form class="modal-form" action="/submit" method="POST">
+          <h1>Wifi Settings</h1>
+          <label for="ssid">SSID</label>
+          <input type="text" id="ssid" name="ssid" /><br />
+          <label for="pass">Password</label>
+          <div class="password-toggle">
+            <input type="password" id="pass" name="pass" />
+            <img
+              class="toggle-icon"
+              id="password-toggle"
+              src="eye-slash.png"
+              alt="Toggle Password Visibility"
+              onclick="togglePasswordVisibility()"
+            />
+          </div>
+          <label for="ip">IP Address</label>
+          <input
+            type="text"
+            id="ip"
+            placeholder="Leave blank = DHCP"
+            name="ip"
+          /><br />
+          <label for="gateway">Gateway Address</label>
+          <input
+            type="text"
+            id="gateway"
+            placeholder="Leave blank = DHCP"
+            name="gateway"
+          /><br />
+          <label for="subnet">Subnet Mask</label>
+          <input
+            type="text"
+            id="subnet"
+            placeholder="Leave blank = DHCP"
+            name="subnet"
+          /><br />
+          <input type="submit" value="Submit" />
+        </form>
+      </div>
+    </div>
+
+    <script>
+      var colorPicker = document.getElementById("colorPicker");
+
+      colorPicker.addEventListener("input", function () {
+        this.style.backgroundColor = this.value;
+        var r = parseInt(colorPicker.value.substring(1, 3), 16);
+        var g = parseInt(colorPicker.value.substring(3, 5), 16);
+        var b = parseInt(colorPicker.value.substring(5, 7), 16);
+        color(r, g, b);
+      });
+
+      function color(r, g, b) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            console.log(this.responseText);
+          }
+        };
+        xhttp.open("POST", "/color", true);
+        xhttp.setRequestHeader(
+          "Content-type",
+          "application/x-www-form-urlencoded"
+        );
+        xhttp.send(`r=${r}&g=${g}&b=${b}`);
+      }
+
+      function mode(select) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            console.log(this.responseText);
+          }
+        };
+        xhttp.open("POST", "/mode", true);
+        xhttp.setRequestHeader(
+          "Content-type",
+          "application/x-www-form-urlencoded"
+        );
+        xhttp.send(`select=${select}`);
+      }
+
+      function togglePasswordVisibility() {
+        var passwordInput = document.getElementById("pass");
+        var toggleIcon = document.getElementById("password-toggle");
+
+        if (passwordInput.type === "password") {
+          passwordInput.type = "text";
+          toggleIcon.src = "eye.png";
+        } else {
+          passwordInput.type = "password";
+          toggleIcon.src = "eye-slash.png";
+        }
+      }
+
+      // WifiManager Button
+      document
+        .getElementById("managerButton")
+        .addEventListener("click", function () {
+          // Show the modal overlay
+          document.querySelector(".modal-overlay").style.display = "flex";
+        });
+
+      // Close wifi manager modal with x
+      document
+        .querySelector(".modal-close")
+        .addEventListener("click", function () {
+          document.querySelector(".modal-overlay").style.display = "none";
+        });
+      // Close modal when the form is submitted
+      document
+        .querySelector(".modal-form")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          document.querySelector(".modal-overlay").style.display = "none";
+        });
+    </script>
+  </body>
+</html>
