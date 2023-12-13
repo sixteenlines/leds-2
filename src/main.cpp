@@ -4,6 +4,8 @@
 #include <filesystem.hpp>
 #include <Arduino.h>
 
+#define _DEBUG_FLAG 1
+
 // loop control
 extern bool wmanager;
 extern uint8_t mode;
@@ -12,17 +14,20 @@ extern uint8_t r;
 extern uint8_t g;
 extern uint8_t b;
 
-void initIO() {
+void initIO()
+{
     Serial.begin(115200);
     Serial.println();
 }
 
-void setup() {
+void setup()
+{
     initIO();
     initFS();
     initLeds();
 
-    switch (initWifi()) {
+    switch (initWifi())
+    {
     case 0:
         Serial.println("[\e[0;31mFAILED\e[0;37m] Initializing WiFi");
         break;
@@ -35,17 +40,29 @@ void setup() {
         break;
     }
     mode = _DEFAULT;
-    setLeds(120, 120, 120);
+    setLeds(0, 0, 0);
 }
 
-void loop() {
-    if (wmanager) {
+void loop()
+{
+    if (wmanager)
+    {
         dnsNext();
     }
-    if (mode == _AQUA) {
-        EVERY_N_MILLISECONDS(20) {
+    if (mode == _AQUA)
+    {
+        EVERY_N_MILLISECONDS(20)
+        {
             pacifica_loop();
             FastLED.show();
+        }
+    }
+    if (_DEBUG_FLAG)
+    {
+        // restart after 6 hours
+        EVERY_N_MILLISECONDS(21600000)
+        {
+            softReset();
         }
     }
     yield();

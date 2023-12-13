@@ -17,6 +17,7 @@ void managerSetup();
 void hostManager();
 void hostIndex();
 void dnsNext();
+void softReset();
 bool handleFileRequest(AsyncWebServerRequest *request, String path);
 
 #endif

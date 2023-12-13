@@ -1,39 +1,43 @@
 #include <leds.hpp>
 
-uint8_t r = 120;
-uint8_t g = 120;
-uint8_t b = 120;
+uint8_t r = 0;
+uint8_t g = 0;
+uint8_t b = 0;
 CRGB leds[NUM_LEDS];
 Adafruit_NeoPixel pixels =
-Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ400);
+    Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ400);
 
 /* color palettes */
 CRGBPalette16 pacifica_palette_1 =
-{ 0x000507, 0x000409, 0x00030B, 0x00030D, 0x000210, 0x000212, 0x000114, 0x000117,
- 0x000019, 0x00001C, 0x000026, 0x000031, 0x00003B, 0x000046, 0x14554B, 0x28AA50 };
+    {0x000507, 0x000409, 0x00030B, 0x00030D, 0x000210, 0x000212, 0x000114, 0x000117,
+     0x000019, 0x00001C, 0x000026, 0x000031, 0x00003B, 0x000046, 0x14554B, 0x28AA50};
 CRGBPalette16 pacifica_palette_2 =
-{ 0x000507, 0x000409, 0x00030B, 0x00030D, 0x000210, 0x000212, 0x000114, 0x000117,
- 0x000019, 0x00001C, 0x000026, 0x000031, 0x00003B, 0x000046, 0x0C5F52, 0x19BE5F };
+    {0x000507, 0x000409, 0x00030B, 0x00030D, 0x000210, 0x000212, 0x000114, 0x000117,
+     0x000019, 0x00001C, 0x000026, 0x000031, 0x00003B, 0x000046, 0x0C5F52, 0x19BE5F};
 CRGBPalette16 pacifica_palette_3 =
-{ 0x000208, 0x00030E, 0x000514, 0x00061A, 0x000820, 0x000927, 0x000B2D, 0x000C33,
- 0x000E39, 0x001040, 0x001450, 0x001860, 0x001C70, 0x002080, 0x1040BF, 0x2060FF };
+    {0x000208, 0x00030E, 0x000514, 0x00061A, 0x000820, 0x000927, 0x000B2D, 0x000C33,
+     0x000E39, 0x001040, 0x001450, 0x001860, 0x001C70, 0x002080, 0x1040BF, 0x2060FF};
 
-void initLeds() {
+void initLeds()
+{
     FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS)
         .setCorrection(TypicalLEDStrip);
     pixels.begin();
     setLeds(0, 0, 0);
 }
 
-void setLeds(uint8_t r, uint8_t g, uint8_t b) {
-    for (int num = 0; num < NUM_LEDS; num++) {
+void setLeds(uint8_t r, uint8_t g, uint8_t b)
+{
+    for (int num = 0; num < NUM_LEDS; num++)
+    {
         pixels.setPixelColor(num,
-            pixels.Color(r, g, b));
+                             pixels.Color(r, g, b));
     }
     pixels.show();
 }
 
-void pacifica_loop() {
+void pacifica_loop()
+{
     // Increment the four "color index start" counters, one for each wave layer.
     // Each is incremented at a different speed, and the speeds vary over time.
     static uint16_t sCIStart1, sCIStart2, sCIStart3, sCIStart4;
@@ -67,11 +71,13 @@ void pacifica_loop() {
     pacifica_deepen_colors();
 }
 
-void pacifica_one_layer(CRGBPalette16& p, uint16_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff) {
+void pacifica_one_layer(CRGBPalette16 &p, uint16_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff)
+{
     uint16_t ci = cistart;
     uint16_t waveangle = ioff;
     uint16_t wavescale_half = (wavescale / 2) + 20;
-    for (uint16_t i = 0; i < NUM_LEDS; i++) {
+    for (uint16_t i = 0; i < NUM_LEDS; i++)
+    {
         waveangle += 250;
         uint16_t s16 = sin16(waveangle) + 32768;
         uint16_t cs = scale16(s16, wavescale_half) + wavescale_half;
@@ -83,15 +89,18 @@ void pacifica_one_layer(CRGBPalette16& p, uint16_t cistart, uint16_t wavescale, 
     }
 }
 
-void pacifica_add_whitecaps() {
+void pacifica_add_whitecaps()
+{
     uint8_t basethreshold = beatsin8(9, 55, 65);
     uint8_t wave = beat8(7);
 
-    for (uint16_t i = 0; i < NUM_LEDS; i++) {
+    for (uint16_t i = 0; i < NUM_LEDS; i++)
+    {
         uint8_t threshold = scale8(sin8(wave), 20) + basethreshold;
         wave += 7;
         uint8_t l = leds[i].getAverageLight();
-        if (l > threshold) {
+        if (l > threshold)
+        {
             uint8_t overage = l - threshold;
             uint8_t overage2 = qadd8(overage, overage);
             leds[i] += CRGB(overage, overage2, qadd8(overage2, overage2));
@@ -99,8 +108,10 @@ void pacifica_add_whitecaps() {
     }
 }
 
-void pacifica_deepen_colors() {
-    for (uint16_t i = 0; i < NUM_LEDS; i++) {
+void pacifica_deepen_colors()
+{
+    for (uint16_t i = 0; i < NUM_LEDS; i++)
+    {
         leds[i].blue = scale8(leds[i].blue, 145);
         leds[i].green = scale8(leds[i].green, 200);
         leds[i] |= CRGB(2, 5, 7);
