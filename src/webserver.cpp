@@ -35,16 +35,7 @@ extern uint8_t b;
 
 bool wmanager = false;
 uint8_t mode = _OFF;
-
-void softReset()
-{
-    // Stop the server
-    webServer.end();
-    // Delay to allow existing connections to close
-    delay(1000);
-    // Restart the microcontroller
-    ESP.restart();
-}
+bool reset = 0;
 
 void dnsNext()
 {
@@ -133,6 +124,11 @@ void hostIndex()
                  { request->send(LittleFS, "/index.html", "text/html", false); });
     webServer.serveStatic("/", LittleFS, "/");
 
+    // Answer GET request to /restart
+    webServer.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request)
+                 { request->send(200, "text/plain", "OK");
+                 reset = true; });
+
     // Answer POST request to /color
     webServer.on("/color", HTTP_POST, [](AsyncWebServerRequest *request)
                  {
@@ -143,6 +139,7 @@ void hostIndex()
             g = request->getParam(PARAM_G, true, false)->value().toInt();
             b = request->getParam(PARAM_B, true, false)->value().toInt();
             setLeds(r, g, b);
+            mode = _DEFAULT;
         }
         request->send(200, "text/plain", "OK"); });
 

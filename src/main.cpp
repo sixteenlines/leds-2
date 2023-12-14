@@ -9,6 +9,7 @@
 // loop control
 extern bool wmanager;
 extern uint8_t mode;
+extern bool reset;
 
 extern uint8_t r;
 extern uint8_t g;
@@ -62,8 +63,12 @@ void loop()
         // restart after 6 hours
         EVERY_N_MILLISECONDS(21600000)
         {
-            softReset();
+            ESP.restart();
         }
+    }
+    if (reset)
+    {
+        ESP.restart();
     }
     yield();
 }

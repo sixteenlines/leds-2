@@ -23,6 +23,7 @@
       <button class="ctrl-btn" id="modeOff" onclick="mode(0)">Off</button>
       <div>&nbsp;</div>
       <button class="ctrl-btn" id="managerButton">Wifi-Setup</button>
+      <button class="ctrl-btn" id="restart" onclick="restart()">Restart</button>
     </div>
 
     <!-- Modal overlay -->
@@ -122,6 +123,17 @@
           passwordInput.type = "password";
           toggleIcon.src = "eye-slash.png";
         }
+      }
+
+      function restart() {
+				var xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = function () {
+					if (this.readyState == 4 && this.status == 200) {
+						console.log(this.responseText);
+					}
+				};
+				xhttp.open("GET", "/restart", true);
+				xhttp.send();
       }
 
       // WifiManager Button
