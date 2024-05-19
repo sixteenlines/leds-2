@@ -27,6 +27,11 @@ const String MANAGER = "http://8.8.8.8";
 const String AP_SSID = "LED-STRIP";
 const String AP_PW = "eisdiele";
 
+/* Time settings*/
+const char *ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = 3600;
+const int daylightOffset_sec = 3600;
+
 /* external vars */
 extern String creds[5];
 extern uint8_t r;
@@ -36,6 +41,37 @@ extern uint8_t b;
 bool wmanager = false;
 uint8_t mode = _OFF;
 bool reset = 0;
+
+void initTime()
+{
+    int currentHour = getHour();
+    if (currentHour == -1)
+    {
+        Serial.println("Failed to obtain time");
+    }
+    else if ((currentHour >= 9) && (currentHour <= 20))
+    {
+        mode = _PLANT;
+        setLeds(238, 113, 158);
+    }
+    else
+    {
+        mode = _DEFAULT;
+        setLeds(0, 0, 0);
+    }
+}
+int getHour()
+{
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo))
+    {
+        return -1;
+    }
+    else
+    {
+        return timeinfo.tm_hour + 2;
+    }
+}
 
 void dnsNext()
 {
@@ -155,6 +191,8 @@ void hostIndex()
             case _DEFAULT:
                 setLeds(r, g, b);
                 break;
+            case _PLANT:
+                setLeds(238, 113, 158);
             default:
                 break;
             }

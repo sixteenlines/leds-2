@@ -19,6 +19,7 @@
 #define _OFF 0
 #define _DEFAULT 1
 #define _AQUA 2
+#define _PLANT 3
 
 /* Serial format macros */
 const String INDENT = "         ";

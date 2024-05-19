@@ -10,14 +10,16 @@
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncTCP.h>
 #include <DNSServer.h>
+#include <time.h>
 
+void initTime();
+int getHour();
 int initWifi();
 bool clientSetup();
 void managerSetup();
 void hostManager();
 void hostIndex();
 void dnsNext();
-void softReset();
 bool handleFileRequest(AsyncWebServerRequest *request, String path);
 
 #endif

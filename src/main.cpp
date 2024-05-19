@@ -40,8 +40,7 @@ void setup()
         wmanager = true;
         break;
     }
-    mode = _DEFAULT;
-    setLeds(0, 0, 0);
+    initTime();
 }
 
 void loop()
@@ -56,6 +55,14 @@ void loop()
         {
             pacifica_loop();
             FastLED.show();
+        }
+    }
+    if (mode != _OFF)
+    {
+        // check time every hour
+        EVERY_N_MILLISECONDS(3600000)
+        {
+            initTime();
         }
     }
     if (_DEBUG_FLAG)
