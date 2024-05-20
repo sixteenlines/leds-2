@@ -52,7 +52,7 @@ void initTime()
     else if ((currentHour >= 9) && (currentHour <= 20))
     {
         mode = _PLANT;
-        setLeds(238, 113, 158);
+        setLeds(200, 90, 130);
     }
     else
     {
@@ -192,7 +192,7 @@ void hostIndex()
                 setLeds(r, g, b);
                 break;
             case _PLANT:
-                setLeds(238, 113, 158);
+                setLeds(200, 90, 130);
             default:
                 break;
             }
