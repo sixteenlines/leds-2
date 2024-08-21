@@ -1,12 +1,12 @@
-%TF.GenerationSoftware,KiCad,Pcbnew,8.0.2*%
-%TF.CreationDate,2024-05-04T20:25:50+02:00*%
+%TF.GenerationSoftware,KiCad,Pcbnew,8.0.3*%
+%TF.CreationDate,2024-08-12T18:47:13+02:00*%
 %TF.ProjectId,led-strip-connector,6c65642d-7374-4726-9970-2d636f6e6e65,rev?*%
 %TF.SameCoordinates,Original*%
 %TF.FileFunction,Paste,Bot*%
 %TF.FilePolarity,Positive*%
 %FSLAX46Y46*%
 G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
-G04 Created by KiCad (PCBNEW 8.0.2) date 2024-05-04 20:25:50*
+G04 Created by KiCad (PCBNEW 8.0.3) date 2024-08-12 18:47:13*
 %MOMM*%
 %LPD*%
 G01*

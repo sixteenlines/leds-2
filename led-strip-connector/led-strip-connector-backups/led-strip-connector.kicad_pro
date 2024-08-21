@@ -180,7 +180,7 @@
       "track_widths": [
         0.0,
         0.4,
-        0.6,
+        0.58,
         1.0,
         2.0
       ],
@@ -484,7 +484,7 @@
       "idf": "",
       "netlist": "",
       "plot": "gerber/",
-      "pos_files": "gerber/",
+      "pos_files": "",
       "specctra_dsn": "",
       "step": "",
       "svg": "",
@@ -552,10 +552,10 @@
           "show": false
         },
         {
-          "group_by": false,
+          "group_by": true,
           "label": "MPN",
           "name": "MPN",
-          "show": false
+          "show": true
         },
         {
           "group_by": false,
@@ -592,12 +592,6 @@
           "label": "Description",
           "name": "Description",
           "show": false
-        },
-        {
-          "group_by": true,
-          "label": "LCSC Part Number",
-          "name": "LCSC Part Number",
-          "show": true
         }
       ],
       "filter_string": "",
