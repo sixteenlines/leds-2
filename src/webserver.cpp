@@ -31,6 +31,8 @@ const String AP_PW = "eisdiele";
 const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
+const char *url = "https://api.sunrise-sunset.org/\
+json?lat=51.0801600&lng=9.2703400";
 
 /* external vars */
 extern String creds[5];
@@ -42,35 +44,148 @@ bool wmanager = false;
 uint8_t mode = _OFF;
 bool reset = 0;
 
-void initTime()
+// Function to convert "HH:MM:SS AM/PM" to struct tm
+bool convertToTM(const char *timeStr, struct tm *timeinfo)
 {
-    int currentHour = getHour();
-    if (currentHour == -1)
+    int hour, minute, second;
+    char ampm[3];
+
+    // Parse the time string
+    int parsed = sscanf(timeStr, "%d:%d:%d %2s", &hour, &minute, &second, ampm);
+
+    if (parsed != 4)
     {
-        Serial.println("Failed to obtain time");
+        return false; // Parsing error
     }
-    else if ((currentHour >= 9) && (currentHour <= 20))
+
+    // Convert to 24-hour format
+    if (strcmp(ampm, "PM") == 0 && hour != 12)
     {
+        hour += 12;
+    }
+    else if (strcmp(ampm, "AM") == 0 && hour == 12)
+    {
+        hour = 0; // Midnight case
+    }
+
+    // Fill the tm struct
+    timeinfo->tm_hour = hour;
+    timeinfo->tm_min = minute;
+    timeinfo->tm_sec = second;
+    timeinfo->tm_isdst = -1; // Daylight saving time (not used here)
+
+    return true;
+}
+
+// Convert a struct tm (containing time) to seconds since midnight
+int timeToSecondsSinceMidnight(struct tm *timeinfo)
+{
+    return (timeinfo->tm_hour * 3600) + (timeinfo->tm_min * 60) + timeinfo->tm_sec;
+}
+
+bool getSunsetSunrise(struct tm *sunrise_tm, struct tm *sunset_tm)
+{
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        HTTPClient http;
+        WiFiClient client;
+        http.begin(client, url);
+        int httpCode = http.GET();
+        // Check for successful response
+        if (httpCode > 0)
+        {
+            String payload = http.getString(); // Get the response payload
+            Serial.println("HTTP Response: " + payload);
+
+            // Parse the JSON payload
+            JsonDocument doc;
+            DeserializationError error = deserializeJson(doc, payload);
+
+            if (error)
+            {
+                Serial.print("JSON parsing failed: ");
+                Serial.println(error.c_str());
+                return 1;
+            }
+
+            // Extract sunrise and sunset
+            const char *sunrise = doc["results"]["sunrise"];
+            const char *sunset = doc["results"]["sunset"];
+
+            Serial.print("Sunrise: ");
+            Serial.println(sunrise);
+            Serial.print("Sunset: ");
+            Serial.println(sunset);
+
+            // Convert sunrise to struct tm
+            if (convertToTM(sunrise, sunrise_tm))
+            {
+                Serial.print("Sunrise in tm struct: ");
+                Serial.printf("%02d:%02d:%02d\n", sunrise_tm->tm_hour, sunrise_tm->tm_min, sunrise_tm->tm_sec);
+            }
+            else
+            {
+                Serial.println("Failed to parse sunrise time.");
+            }
+
+            // Convert sunset to struct tm
+            if (convertToTM(sunset, sunset_tm))
+            {
+                Serial.print("Sunset in tm struct: ");
+                Serial.printf("%02d:%02d:%02d\n", sunset_tm->tm_hour, sunset_tm->tm_min, sunset_tm->tm_sec);
+            }
+            else
+            {
+                Serial.println("Failed to parse sunset time.");
+            }
+        }
+        else
+        {
+            Serial.println("HTTP request failed!");
+            return 1;
+        }
+
+        http.end(); // Close the connection
+        return 0;
+    }
+    return 1;
+}
+
+// Function to check if it's day or night based on sunrise and sunset
+void checkDayOrNight(struct tm *localTime, struct tm *sunrise_tm, struct tm *sunset_tm)
+{
+    // Convert times to seconds since midnight
+    int local_seconds = timeToSecondsSinceMidnight(localTime);
+    int sunrise_seconds = timeToSecondsSinceMidnight(sunrise_tm);
+    int sunset_seconds = timeToSecondsSinceMidnight(sunset_tm);
+
+    // Check if it's daytime or nighttime
+    if (local_seconds >= sunrise_seconds && local_seconds <= sunset_seconds)
+    {
+        Serial.println("It's daytime. Plant light on");
         mode = _PLANT;
         setLeds(200, 90, 130);
     }
     else
     {
+        Serial.println("It's nighttime. Plant light off.");
         mode = _DEFAULT;
         setLeds(0, 0, 0);
     }
 }
-int getHour()
+
+bool initTime()
 {
     struct tm timeinfo;
-    if (!getLocalTime(&timeinfo))
+    struct tm sunset;
+    struct tm sunrise;
+    if (!(getLocalTime(&timeinfo) || getSunsetSunrise(&sunrise, &sunset)))
     {
-        return -1;
+        return 1;
     }
-    else
-    {
-        return timeinfo.tm_hour + 2;
-    }
+
+    checkDayOrNight(&timeinfo, &sunrise, &sunset);
+    return 0;
 }
 
 void dnsNext()
@@ -127,14 +242,14 @@ bool clientSetup()
     }
     Serial.print(INDENT + "Connecting to WiFi");
     WiFi.begin(creds[_SSID].c_str(), creds[_PASS].c_str());
-    setLeds(200, 200, 0); // yellow
+    setLeds(15, 15, 0); // yellow
     for (int tries = 0; !(WiFi.status() == WL_CONNECTED); tries++)
     {
         delay(100);
         Serial.print(".");
         if (tries == 50) // connection unsuccessful
         {
-            setLeds(200, 0, 0); // red
+            setLeds(15, 0, 0); // red
             delay(200);
             Serial.println();
             Serial.println("[\e[0;31mFAILED\e[0;37m] Connecting to WiFi");
@@ -143,7 +258,7 @@ bool clientSetup()
         }
     }
     // successful connection
-    setLeds(0, 200, 0); // green
+    setLeds(0, 15, 0); // green
     delay(200);
     hostIndex(); // host the usual webpage
     Serial.println();

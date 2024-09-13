@@ -14,7 +14,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <FastLED.h>
 
-#define NUM_LEDS 98
+#define NUM_LEDS 60
 #define LED_PIN 5
 #define BRIGHTNESS 255
 #define SATURATION 255

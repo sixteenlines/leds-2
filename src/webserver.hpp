@@ -10,10 +10,11 @@
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncTCP.h>
 #include <DNSServer.h>
+#include <ArduinoJson.h>
+#include <ESP8266HTTPClient.h>
 #include <time.h>
 
-void initTime();
-int getHour();
+bool initTime();
 int initWifi();
 bool clientSetup();
 void managerSetup();
@@ -21,5 +22,9 @@ void hostManager();
 void hostIndex();
 void dnsNext();
 bool handleFileRequest(AsyncWebServerRequest *request, String path);
+void checkDayOrNight(struct tm *localTime, struct tm *sunrise_tm, struct tm *sunset_tm);
+bool getSunsetSunrise(struct tm *sunrise_tm, struct tm *sunset_tm);
+int timeToSecondsSinceMidnight(struct tm *timeinfo);
+bool convertToTM(const char *timeStr, struct tm *timeinfo);
 
 #endif
