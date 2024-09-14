@@ -28,9 +28,10 @@ const String AP_SSID = "LED-STRIP";
 const String AP_PW = "eisdiele";
 
 /* Time settings*/
-const char *ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = 3600;
-const int daylightOffset_sec = 3600;
+const char *ntpServer = "de.pool.ntp.org";
+// Timezone offsets (Germany uses CET/CEST)
+const long utcOffsetInSeconds = 3600;     // UTC+1 for Central European Time (CET)
+const int daylightOffsetInSeconds = 3600; // Additional +1 hour for daylight saving time
 const char *url = "https://api.sunrise-sunset.org/\
 json?lat=51.0801600&lng=9.2703400";
 
@@ -43,6 +44,57 @@ extern uint8_t b;
 bool wmanager = false;
 uint8_t mode = _OFF;
 bool reset = 0;
+
+bool isDaylightSavingTime(struct tm *timeinfo)
+{
+    // DST in Germany starts on the last Sunday of March and ends on the last Sunday of October
+    if (timeinfo->tm_mon < 2 || timeinfo->tm_mon > 9)
+    {
+        return false; // Before March or after October: No DST
+    }
+
+    if (timeinfo->tm_mon > 2 && timeinfo->tm_mon < 9)
+    {
+        return true; // Between April and September: Always DST
+    }
+
+    // Check last Sunday of March or October
+    int lastSunday = (timeinfo->tm_mday - timeinfo->tm_wday); // Find the last Sunday of the month
+
+    if (timeinfo->tm_mon == 2)
+    {
+        // March: DST starts after the last Sunday
+        return timeinfo->tm_mday >= lastSunday;
+    }
+    else
+    {
+        // October: DST ends before the last Sunday
+        return timeinfo->tm_mday < lastSunday;
+    }
+}
+
+// Adjust a UTC time to local time based on whether daylight saving is active
+void adjustToLocalTime(struct tm *timeinfo)
+{
+    struct tm localTimeInfo;
+    if (getLocalTime(&localTimeInfo))
+    {
+        if (isDaylightSavingTime(&localTimeInfo))
+        {
+            timeinfo->tm_hour += 2; // UTC+2 for DST
+        }
+        else
+        {
+            timeinfo->tm_hour += 1; // UTC+1 for standard time
+        }
+
+        if (timeinfo->tm_hour >= 24)
+        {
+            timeinfo->tm_hour -= 24;
+            timeinfo->tm_mday += 1; // Adjust to the next day if necessary
+        }
+    }
+}
 
 // Function to convert "HH:MM:SS AM/PM" to struct tm
 bool convertToTM(const char *timeStr, struct tm *timeinfo)
@@ -72,7 +124,6 @@ bool convertToTM(const char *timeStr, struct tm *timeinfo)
     timeinfo->tm_hour = hour;
     timeinfo->tm_min = minute;
     timeinfo->tm_sec = second;
-    timeinfo->tm_isdst = -1; // Daylight saving time (not used here)
 
     return true;
 }
@@ -113,15 +164,21 @@ bool getSunsetSunrise(struct tm *sunrise_tm, struct tm *sunset_tm)
             const char *sunrise = doc["results"]["sunrise"];
             const char *sunset = doc["results"]["sunset"];
 
-            Serial.print("Sunrise: ");
-            Serial.println(sunrise);
-            Serial.print("Sunset: ");
-            Serial.println(sunset);
-
             // Convert sunrise to struct tm
             convertToTM(sunrise, sunrise_tm);
+            adjustToLocalTime(sunrise_tm); // Adjust to local time
             // Convert sunset to struct tm
             convertToTM(sunset, sunset_tm);
+            adjustToLocalTime(sunset_tm); // Adjust to local time
+
+            // Print adjusted times
+            Serial.print("Sunrise (local): ");
+            Serial.printf("%02d:%02d:%02d\n", sunrise_tm->tm_hour,
+                          sunrise_tm->tm_min, sunrise_tm->tm_sec);
+
+            Serial.print("Sunset (local): ");
+            Serial.printf("%02d:%02d:%02d\n", sunset_tm->tm_hour,
+                          sunset_tm->tm_min, sunset_tm->tm_sec);
         }
         else
         {
@@ -163,6 +220,7 @@ bool initTime()
     struct tm timeinfo;
     struct tm sunset;
     struct tm sunrise;
+    configTime(utcOffsetInSeconds, daylightOffsetInSeconds, ntpServer);
     if (!getLocalTime(&timeinfo))
     {
         Serial.println("Failed to get time.");
