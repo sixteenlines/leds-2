@@ -59,8 +59,8 @@ void loop()
     }
     if (mode != _OFF)
     {
-        // check time every hour
-        EVERY_N_MILLISECONDS(3600000)
+        // check time every 10 minutes
+        EVERY_N_MILLISECONDS(600000)
         {
             initTime();
         }

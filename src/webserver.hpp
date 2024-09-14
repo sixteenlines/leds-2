@@ -12,6 +12,7 @@
 #include <DNSServer.h>
 #include <ArduinoJson.h>
 #include <ESP8266HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <time.h>
 
 bool initTime();

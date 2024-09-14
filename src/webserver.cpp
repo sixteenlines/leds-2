@@ -88,14 +88,15 @@ bool getSunsetSunrise(struct tm *sunrise_tm, struct tm *sunset_tm)
     if (WiFi.status() == WL_CONNECTED)
     {
         HTTPClient http;
-        WiFiClient client;
+        WiFiClientSecure client;
+        client.setInsecure(); // skip cert validation
         http.begin(client, url);
         int httpCode = http.GET();
         // Check for successful response
         if (httpCode > 0)
         {
             String payload = http.getString(); // Get the response payload
-            Serial.println("HTTP Response: " + payload);
+            // Serial.println("HTTP Response: " + payload);
 
             // Parse the JSON payload
             JsonDocument doc;
@@ -105,7 +106,7 @@ bool getSunsetSunrise(struct tm *sunrise_tm, struct tm *sunset_tm)
             {
                 Serial.print("JSON parsing failed: ");
                 Serial.println(error.c_str());
-                return 1;
+                return false;
             }
 
             // Extract sunrise and sunset
@@ -118,37 +119,20 @@ bool getSunsetSunrise(struct tm *sunrise_tm, struct tm *sunset_tm)
             Serial.println(sunset);
 
             // Convert sunrise to struct tm
-            if (convertToTM(sunrise, sunrise_tm))
-            {
-                Serial.print("Sunrise in tm struct: ");
-                Serial.printf("%02d:%02d:%02d\n", sunrise_tm->tm_hour, sunrise_tm->tm_min, sunrise_tm->tm_sec);
-            }
-            else
-            {
-                Serial.println("Failed to parse sunrise time.");
-            }
-
+            convertToTM(sunrise, sunrise_tm);
             // Convert sunset to struct tm
-            if (convertToTM(sunset, sunset_tm))
-            {
-                Serial.print("Sunset in tm struct: ");
-                Serial.printf("%02d:%02d:%02d\n", sunset_tm->tm_hour, sunset_tm->tm_min, sunset_tm->tm_sec);
-            }
-            else
-            {
-                Serial.println("Failed to parse sunset time.");
-            }
+            convertToTM(sunset, sunset_tm);
         }
         else
         {
             Serial.println("HTTP request failed!");
-            return 1;
+            return false;
         }
 
         http.end(); // Close the connection
-        return 0;
+        return true;
     }
-    return 1;
+    return false;
 }
 
 // Function to check if it's day or night based on sunrise and sunset
@@ -179,11 +163,16 @@ bool initTime()
     struct tm timeinfo;
     struct tm sunset;
     struct tm sunrise;
-    if (!(getLocalTime(&timeinfo) || getSunsetSunrise(&sunrise, &sunset)))
+    if (!getLocalTime(&timeinfo))
     {
+        Serial.println("Failed to get time.");
         return 1;
     }
-
+    if (!getSunsetSunrise(&sunrise, &sunset))
+    {
+        Serial.println("Failed to get sunset/sunrise.");
+        return 1;
+    }
     checkDayOrNight(&timeinfo, &sunrise, &sunset);
     return 0;
 }
